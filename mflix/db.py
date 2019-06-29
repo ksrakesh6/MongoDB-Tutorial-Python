@@ -138,10 +138,12 @@ def get_movies_faceted(filters, page, movies_per_page):
     # Add the necessary stages to the pipeline variable in the correct order.
     # pipeline.extend(...)
 
+
+
     try:
+        pipeline=pipeline+[skip_stage,limit_stage,facet_stage]
         movies = list(db.movies.aggregate(pipeline, allowDiskUse=True))[0]
-        count = list(db.movies.aggregate(counting, allowDiskUse=True))[
-            0].get("count")
+        count = list(db.movies.aggregate(counting, allowDiskUse=True))[0].get("count")
         return (movies, count)
     except OperationFailure:
         raise OperationFailure(
@@ -197,7 +199,7 @@ def get_movies(filters, page, movies_per_page):
 
 
     """
-    Ticket: Paging
+    Ticket: Pagingget_movies_faceted
 
     Before this method returns back to the API, use the "movies_per_page"
     argument to decide how many movies get displayed per page. The "page"
