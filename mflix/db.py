@@ -369,7 +369,7 @@ def get_user(email):
     """
     # TODO: User Management
     # Retrieve the user document corresponding with the user's email.
-    return db.users.find_one({ "some_field": "some_value" })
+    return db.users.find_one({ 'email':email })
 
 
 def add_user(name, email, hashedpw):
@@ -390,11 +390,11 @@ def add_user(name, email, hashedpw):
         # Insert a user with the "name", "email", and "password" fields.
         # TODO: Durable Writes
         # Use a more durable Write Concern for this operation.
-        db.users.insert_one({
-            "name": "mongo",
-            "email": "mongo@mongodb.com",
-            "password": "flibbertypazzle"
-        })
+        db.users.insert({
+            "email": email,
+            "name": name,
+            "password": hashedpw
+        },w=1)
         return {"success": True}
     except DuplicateKeyError:
         return {"error": "A user with the given email already exists."}
@@ -412,9 +412,10 @@ def login_user(email, jwt):
         # Use an UPSERT statement to update the "jwt" field in the document,
         # matching the "user_id" field with the email passed to this function.
         db.sessions.update_one(
-            { "some_field": "some_value" },
-            { "$set": { "some_other_field": "some_other_value" } }
+            { "user_id": email },
+            { "$set": { "jwt": jwt } }, upsert=True
         )
+
         return {"success": True}
     except Exception as e:
         return {"error": e}
@@ -430,7 +431,7 @@ def logout_user(email):
     try:
         # TODO: User Management
         # Delete the document in the `sessions` collection matching the email.
-        db.sessions.delete_one({ "some_field": "some_value" })
+        db.sessions.delete_one({ "user_id": email })
         return {"success": True}
     except Exception as e:
         return {"error": e}
@@ -445,7 +446,7 @@ def get_user_session(email):
     try:
         # TODO: User Management
         # Retrieve the session document corresponding with the user's email.
-        return db.sessions.find_one({ "some_field": "some_value" })
+        return db.sessions.find_one({ "user_id": email})
     except Exception as e:
         return {"error": e}
 
@@ -458,8 +459,8 @@ def delete_user(email):
     try:
         # TODO: User Management
         # Delete the corresponding documents from `users` and `sessions`.
-        db.sessions.delete_one({ "some_field": "some_value" })
-        db.users.delete_one({ "some_field": "some_value" })
+        db.sessions.delete_one({ "user_id": email })
+        db.users.delete_one({ "email": email })
         if get_user(email) is None:
             return {"success": True}
         else:
@@ -486,8 +487,8 @@ def update_prefs(email, prefs):
         # TODO: User preferences
         # Use the data in "prefs" to update the user's preferences.
         response = db.users.update_one(
-            { "some_field": "some_value" },
-            { "$set": { "some_other_field": "some_other_value" } }
+            { "email": email },
+            { "$set": { "preferences": prefs } }
         )
         if response.matched_count == 0:
             return {'error': 'no user found'}
