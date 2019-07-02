@@ -42,6 +42,7 @@ def test_login(client):
     result = login_user(test_user.get('email'), test_user.get('jwt'))
     assert result == {'success': True}
     session_result = get_user_session(test_user.get('email'))
+    print(test_user.get('email'),session_result.get('user_id'))
     assert session_result.get('user_id') == test_user.get('email')
     assert session_result.get('jwt') == test_user.get('jwt')
 
